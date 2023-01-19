@@ -1,0 +1,3 @@
+{"level":"ERROR","ts":"2023-01-19T11:29:59.557+0330","msg":"error happen while serving: listen tcp: address 8888: missing port in address"}
+{"level":"ERROR","ts":"2023-01-19T11:30:31.318+0330","msg":"error happen while serving: listen tcp: address 8888: missing port in address"}
+{"level":"ERROR","ts":"2023-01-19T11:30:57.237+0330","msg":"error happen while serving: listen tcp: address 8888: missing port in address"}
