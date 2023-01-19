@@ -32,7 +32,6 @@ func serve(c *cli.Context) error {
 
 	logger := zap.New(f, zapcore.ErrorLevel)
 
-	// create repo instance
 	repo, err := postgres.New(cfg.Psql, logger)
 
 	if err != nil {

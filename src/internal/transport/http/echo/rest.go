@@ -18,6 +18,7 @@ import (
 type rest struct {
 	echo            *echo.Echo
 	adminController *adminController
+	userController  *userController
 	adminMiddleware *mdlware.AdminMiddleware
 }
 
@@ -31,6 +32,10 @@ func New(logger logger.Logger, repo repository.Postgres, jwt jwt.Jwt) http.Rest 
 		},
 		adminMiddleware: &mdlware.AdminMiddleware{
 			JwtPkg: jwt,
+		},
+		userController: &userController{
+			logger: logger,
+			repo:   repo,
 		},
 	}
 }

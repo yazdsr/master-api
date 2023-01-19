@@ -1,0 +1,8 @@
+DROP TABLE IF EXISTS servers;
+
+CREATE TABLE servers
+(
+    id SERIAL PRIMARY KEY,
+    ip VARCHAR(255) NOT NULL UNIQUE,
+    port INTEGER NOT NULL
+);
