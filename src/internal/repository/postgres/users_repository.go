@@ -6,6 +6,7 @@ import (
 
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/yazdsr/master-api/internal/entity/model"
+	"github.com/yazdsr/master-api/internal/transport/http/request"
 	"github.com/yazdsr/master-api/pkg/hash"
 	"github.com/yazdsr/master-api/pkg/rest_err"
 )
@@ -33,10 +34,11 @@ func (psql *postgres) FindUserByID(id int) (*model.User, rest_err.RestErr) {
 	return user, nil
 }
 
-func (psql *postgres) CreateUser(user model.User) rest_err.RestErr {
-	password := hash.GenerateSha256(user.Password)
+func (psql *postgres) CreateUser(usr request.CreateUser) rest_err.RestErr {
+	user := new(model.User)
+	password := hash.GenerateSha256(usr.Password)
 	query := `INSERT INTO users (username, password, full_name, server_id, valid_until) VALUES ($1, $2, $3, $4, $5) RETURNING id`
-	err := psql.db.QueryRow(context.Background(), query, user.Username, password, user.FullName, user.ServerID, user.ValidUntil).Scan(&user.ID)
+	err := psql.db.QueryRow(context.Background(), query, usr.Username, password, usr.FullName, usr.ServerID, usr.ValidUntil).Scan(&user.ID)
 	if err != nil {
 		return rest_err.NewRestErr(http.StatusInternalServerError, "error while adding user", []string{err.Error()})
 	}
@@ -46,10 +48,10 @@ func (psql *postgres) CreateUser(user model.User) rest_err.RestErr {
 	return nil
 }
 
-func (psql *postgres) UpdateUser(user model.User) rest_err.RestErr {
+func (psql *postgres) UpdateUser(id int, user request.CreateUser) rest_err.RestErr {
 	password := hash.GenerateSha256(user.Password)
 	query := `UPDATE users SET password = $1, full_name = $2, valid_until = $3 WHERE id = $4`
-	_, err := psql.db.Exec(context.Background(), query, password, user.FullName, user.ValidUntil, user.ID)
+	_, err := psql.db.Exec(context.Background(), query, password, user.FullName, user.ValidUntil, id)
 	if err != nil {
 		return rest_err.NewRestErr(http.StatusInternalServerError, "error while updating user", []string{err.Error()})
 	}
@@ -63,4 +65,17 @@ func (psql *postgres) DeleteUser(id int) rest_err.RestErr {
 		return rest_err.NewRestErr(http.StatusInternalServerError, "error while deleting user", []string{err.Error()})
 	}
 	return nil
+}
+
+func (psql *postgres) FindUserByUsernameAndServerID (username string, serverID int) (*model.User, rest_err.RestErr) {
+	user := new(model.User)
+	query := `SELECT * FROM users WHERE username = $1 AND server_id = $2`
+	err := pgxscan.Get(context.Background(), psql.db, user, query, username, serverID)
+	if err != nil {
+		if err.Error() == "scanning one: no rows in result set" {
+			return nil, rest_err.NewRestErr(http.StatusNotFound, "user not found", []string{})
+		}
+		return nil, rest_err.NewRestErr(http.StatusInternalServerError, err.Error(), []string{})
+	}
+	return user, nil
 }
