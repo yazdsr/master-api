@@ -13,7 +13,7 @@ import (
 
 func (psql *postgres) FindAllUsers() ([]model.User, rest_err.RestErr) {
 	var users []model.User = []model.User{}
-	query := `SELECT * FROM users`
+	query := `SELECT * FROM users ORDER BY id ASC`
 	err := pgxscan.Select(context.Background(), psql.db, &users, query)
 	if err != nil {
 		return []model.User{}, rest_err.NewRestErr(http.StatusInternalServerError, err.Error(), []string{})
