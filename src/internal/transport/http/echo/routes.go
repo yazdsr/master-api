@@ -12,6 +12,4 @@ func (r *rest) routing() {
 	v1.PATCH("/users/:id/activate", r.userController.ActiveUser, r.adminMiddleware.OnlyAdmin)
 	v1.PATCH("/users/:id/disable", r.userController.DisableUser, r.adminMiddleware.OnlyAdmin)
 	v1.POST("/servers/:id/heartbeat", r.serverController.HeartBeat, r.adminMiddleware.OnlyAdmin)
-
-	// v1.GET("/servers/:id/status", r.serverController.GetServerStatus, r.adminMiddleware.OnlyAdmin)
 }

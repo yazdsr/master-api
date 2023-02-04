@@ -49,7 +49,7 @@ func (r *rest) Start(address string) error {
 	r.echo.Use(middleware.Recover())
 	r.echo.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     []string{"*"},
-		AllowMethods:     []string{nethttp.MethodGet, nethttp.MethodOptions, nethttp.MethodPut, nethttp.MethodPost, nethttp.MethodDelete},
+		AllowMethods:     []string{nethttp.MethodGet, nethttp.MethodOptions, nethttp.MethodPut, nethttp.MethodPost, nethttp.MethodDelete, nethttp.MethodPatch},
 		AllowCredentials: true,
 	}))
 
