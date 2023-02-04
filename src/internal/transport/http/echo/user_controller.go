@@ -125,20 +125,17 @@ func (uc *userController) CreateUser(c echo.Context) error {
 	}
 	defer resp.Body.Close()
 
-	// there is bug here
-	// any way it will return an error
-	// i should check if error is from rpc or json marshalling
-	// for now its enough
 	var rpcErr json2.Error
 	err = json2.DecodeClientResponse(resp.Body, &rpcErr)
-	if err != nil {
+	jErr, ok := err.(*json2.Error)
+	if ok {
 		return c.JSON(http.StatusInternalServerError, response.Error{
 			Code:    http.StatusInternalServerError,
-			Message: "Internal Server Error",
+			Message: jErr.Error(),
 		})
 	}
 
-	if rErr = uc.repo.CreateUser(*user); err != nil {
+	if rErr = uc.repo.CreateUser(*user); rErr != nil {
 		return c.JSON(rErr.StatusCode(), response.Error{
 			Code:    rErr.StatusCode(),
 			Message: rErr.Error(),
@@ -160,31 +157,89 @@ func (uc *userController) UpdateUser(c echo.Context) error {
 		}
 		return c.JSON(rErr.Code, rErr)
 	}
-	user := new(request.CreateUser)
+	user := new(request.UpdateUser)
 	if err := c.Bind(user); err != nil {
-		rErr := response.Error{
+		return c.JSON(http.StatusBadRequest, response.Error{
 			Code:    http.StatusBadRequest,
 			Message: "Invalid Request",
-		}
-		return c.JSON(rErr.Code, rErr)
+		})
 	}
-	if id == 0 || user.Username == "" || user.Password == "" || user.FullName == "" || user.ServerID == 0 || user.ValidUntil.IsZero() {
+	if id == 0 || user.FullName == "" || user.ValidUntil.IsZero() {
 		rErr := response.Error{
 			Code:    http.StatusBadRequest,
 			Message: "Fill Required Fields",
 		}
 		return c.JSON(rErr.Code, rErr)
 	}
-	// send json-rpc call to server to update user
 
-	rerr := uc.repo.UpdateUser(id, *user)
-	if err != nil {
-		rErr := response.Error{
+	usr, rerr := uc.repo.FindUserByID(id)
+	if rerr != nil {
+		return c.JSON(rerr.StatusCode(), response.Error{
+			Code:    rerr.StatusCode(),
+			Message: rerr.Error(),
+		})
+	}
+
+	server, rerr := uc.repo.FindServerByID(usr.ServerID)
+	if rerr != nil {
+		return c.JSON(rerr.StatusCode(), response.Error{
+			Code:    rerr.StatusCode(),
+			Message: rerr.Error(),
+		})
+	}
+
+	if user.Password != "" {
+		url := fmt.Sprintf("http://%s:%d", server.Ip, server.Port)
+		params := &request.UpdateUserRPC{
+			Username: usr.Username,
+			Password: user.Password,
+		}
+
+		msg, err := json2.EncodeClientRequest("updatePassword", params)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, response.Error{
+				Code:    http.StatusInternalServerError,
+				Message: "Error in encoding request",
+			})
+		}
+
+		req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(msg))
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, response.Error{
+				Code:    http.StatusInternalServerError,
+				Message: "Internal Server Error",
+			})
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+		client := new(http.Client)
+		resp, err := client.Do(req)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, response.Error{
+				Code:    http.StatusInternalServerError,
+				Message: fmt.Sprintf("Error in sending request to %s: %s", url, err.Error()),
+			})
+		}
+		defer resp.Body.Close()
+
+		var rpcErr json2.Error
+		err = json2.DecodeClientResponse(resp.Body, &rpcErr)
+		jErr, ok := err.(*json2.Error)
+		if ok {
+			return c.JSON(http.StatusInternalServerError, response.Error{
+				Code:    http.StatusInternalServerError,
+				Message: jErr.Error(),
+			})
+		}
+	}
+
+	rerr = uc.repo.UpdateUser(id, *user)
+	if rerr != nil {
+		return c.JSON(rerr.StatusCode(), response.Error{
 			Code:    rerr.StatusCode(),
 			Message: rerr.Error(),
 			Errors:  rerr.Errors(),
-		}
-		return c.JSON(rErr.Code, rErr)
+		})
 	}
 	return c.JSON(http.StatusCreated, response.Success{
 		Code:    http.StatusCreated,
@@ -252,21 +307,21 @@ func (uc *userController) DeleteUser(c echo.Context) error {
 
 	var rpcErr json2.Error
 	err = json2.DecodeClientResponse(resp.Body, &rpcErr)
-	if err != nil {
+	jErr, ok := err.(*json2.Error)
+	if ok {
 		return c.JSON(http.StatusInternalServerError, response.Error{
 			Code:    http.StatusInternalServerError,
-			Message: "Internal Server Error",
+			Message: jErr.Error(),
 		})
 	}
 
 	rerr := uc.repo.DeleteUser(id)
-	if err != nil {
-		rErr := response.Error{
+	if rerr != nil {
+		return c.JSON(rerr.StatusCode(), response.Error{
 			Code:    rerr.StatusCode(),
 			Message: rerr.Error(),
 			Errors:  rerr.Errors(),
-		}
-		return c.JSON(rErr.Code, rErr)
+		})
 	}
 	return c.JSON(http.StatusOK, response.Success{
 		Code:    http.StatusOK,

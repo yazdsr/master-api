@@ -11,7 +11,7 @@ type Postgres interface {
 	FindAllUsers() ([]model.User, rest_err.RestErr)
 	FindUserByID(id int) (*model.User, rest_err.RestErr)
 	CreateUser(user request.CreateUser) rest_err.RestErr
-	UpdateUser(id int, user request.CreateUser) rest_err.RestErr
+	UpdateUser(id int, user request.UpdateUser) rest_err.RestErr
 	DeleteUser(id int) rest_err.RestErr
 	FindServerByID(id int) (*model.Server, rest_err.RestErr)
 	FindUserByUsernameAndServerID(username string, serverID int) (*model.User, rest_err.RestErr)

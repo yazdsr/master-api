@@ -48,10 +48,17 @@ func (psql *postgres) CreateUser(usr request.CreateUser) rest_err.RestErr {
 	return nil
 }
 
-func (psql *postgres) UpdateUser(id int, user request.CreateUser) rest_err.RestErr {
+func (psql *postgres) UpdateUser(id int, user request.UpdateUser) rest_err.RestErr {
+	var query string
 	password := hash.GenerateSha256(user.Password)
-	query := `UPDATE users SET password = $1, full_name = $2, valid_until = $3 WHERE id = $4`
-	_, err := psql.db.Exec(context.Background(), query, password, user.FullName, user.ValidUntil, id)
+	var err error
+	if user.Password == "" {
+		query = `UPDATE users SET full_name = $1, valid_until = $2 WHERE id = $3`
+		_, err = psql.db.Exec(context.Background(), query, user.FullName, user.ValidUntil, id)
+	} else {
+		query = `UPDATE users SET password = $1, full_name = $2, valid_until = $3 WHERE id = $4`
+		_, err = psql.db.Exec(context.Background(), query, password, user.FullName, user.ValidUntil, id)
+	}
 	if err != nil {
 		return rest_err.NewRestErr(http.StatusInternalServerError, "error while updating user", []string{err.Error()})
 	}
@@ -67,7 +74,7 @@ func (psql *postgres) DeleteUser(id int) rest_err.RestErr {
 	return nil
 }
 
-func (psql *postgres) FindUserByUsernameAndServerID (username string, serverID int) (*model.User, rest_err.RestErr) {
+func (psql *postgres) FindUserByUsernameAndServerID(username string, serverID int) (*model.User, rest_err.RestErr) {
 	user := new(model.User)
 	query := `SELECT * FROM users WHERE username = $1 AND server_id = $2`
 	err := pgxscan.Get(context.Background(), psql.db, user, query, username, serverID)
