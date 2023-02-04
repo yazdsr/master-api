@@ -1,8 +1,17 @@
 package echo
 
+import (
+	"time"
+
+	"github.com/labstack/echo/v4/middleware"
+)
+
 func (r *rest) routing() {
 	v1 := r.echo.Group("/v1")
-
+	v1.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
+		Timeout:      4 * time.Second,
+		ErrorMessage: "Timeout error, maybe server is down! contact your administrator.",
+	}))
 	v1.POST("/login", r.adminController.login)
 	v1.GET("/users", r.userController.FindAllUsers, r.adminMiddleware.OnlyAdmin)
 	v1.GET("/users/:id", r.userController.FindUserByID, r.adminMiddleware.OnlyAdmin)
