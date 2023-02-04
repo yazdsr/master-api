@@ -16,10 +16,11 @@ import (
 )
 
 type rest struct {
-	echo            *echo.Echo
-	adminController *adminController
-	userController  *userController
-	adminMiddleware *mdlware.AdminMiddleware
+	echo             *echo.Echo
+	adminController  *adminController
+	userController   *userController
+	adminMiddleware  *mdlware.AdminMiddleware
+	serverController *serverController
 }
 
 func New(logger logger.Logger, repo repository.Postgres, jwt jwt.Jwt) http.Rest {
@@ -36,6 +37,10 @@ func New(logger logger.Logger, repo repository.Postgres, jwt jwt.Jwt) http.Rest 
 		userController: &userController{
 			logger: logger,
 			repo:   repo,
+		},
+		serverController: &serverController{
+			logger: logger,
+			repo: repo,
 		},
 	}
 }

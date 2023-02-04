@@ -15,4 +15,6 @@ type Postgres interface {
 	DeleteUser(id int) rest_err.RestErr
 	FindServerByID(id int) (*model.Server, rest_err.RestErr)
 	FindUserByUsernameAndServerID(username string, serverID int) (*model.User, rest_err.RestErr)
+	ActiveUser(id int) (rest_err.RestErr)
+	DisableUser(id int) (rest_err.RestErr)
 }

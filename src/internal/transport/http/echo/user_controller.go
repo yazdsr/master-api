@@ -328,3 +328,166 @@ func (uc *userController) DeleteUser(c echo.Context) error {
 		Message: "User Deleted",
 	})
 }
+
+func (uc *userController) ActiveUser(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		rErr := response.Error{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid ID",
+		}
+		return c.JSON(rErr.Code, rErr)
+	}
+
+	user, rErr := uc.repo.FindUserByID(id)
+	if rErr != nil {
+		return c.JSON(rErr.StatusCode(), response.Error{
+			Code:    rErr.StatusCode(),
+			Message: rErr.Error(),
+		})
+	}
+
+	server, rErr := uc.repo.FindServerByID(user.ServerID)
+	if rErr != nil {
+		return c.JSON(rErr.StatusCode(), response.Error{
+			Code:    rErr.StatusCode(),
+			Message: rErr.Error(),
+		})
+	}
+
+	url := fmt.Sprintf("http://%s:%d", server.Ip, server.Port)
+	params := &request.ActiveUserRPC{
+		Username: user.Username,
+	}
+
+	msg, err := json2.EncodeClientRequest("activeUser", params)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, response.Error{
+			Code:    http.StatusInternalServerError,
+			Message: "Error in encoding request",
+		})
+	}
+
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(msg))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, response.Error{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal Server Error",
+		})
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	client := new(http.Client)
+	resp, err := client.Do(req)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, response.Error{
+			Code:    http.StatusInternalServerError,
+			Message: fmt.Sprintf("Error in sending request to %s: %s", url, err.Error()),
+		})
+	}
+	defer resp.Body.Close()
+
+	var rpcErr json2.Error
+	err = json2.DecodeClientResponse(resp.Body, &rpcErr)
+	jErr, ok := err.(*json2.Error)
+	if ok {
+		return c.JSON(http.StatusInternalServerError, response.Error{
+			Code:    http.StatusInternalServerError,
+			Message: jErr.Error(),
+		})
+	}
+
+	rerr := uc.repo.ActiveUser(id)
+	if rerr != nil {
+		return c.JSON(rerr.StatusCode(), response.Error{
+			Code:    rerr.StatusCode(),
+			Message: rerr.Error(),
+			Errors:  rerr.Errors(),
+		})
+	}
+	return c.JSON(http.StatusOK, response.Success{
+		Code:    http.StatusOK,
+		Message: "User Activated",
+	})
+}
+func (uc *userController) DisableUser(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		rErr := response.Error{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid ID",
+		}
+		return c.JSON(rErr.Code, rErr)
+	}
+
+	user, rErr := uc.repo.FindUserByID(id)
+	if rErr != nil {
+		return c.JSON(rErr.StatusCode(), response.Error{
+			Code:    rErr.StatusCode(),
+			Message: rErr.Error(),
+		})
+	}
+
+	server, rErr := uc.repo.FindServerByID(user.ServerID)
+	if rErr != nil {
+		return c.JSON(rErr.StatusCode(), response.Error{
+			Code:    rErr.StatusCode(),
+			Message: rErr.Error(),
+		})
+	}
+
+	url := fmt.Sprintf("http://%s:%d", server.Ip, server.Port)
+	params := &request.ActiveUserRPC{
+		Username: user.Username,
+	}
+
+	msg, err := json2.EncodeClientRequest("disableUser", params)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, response.Error{
+			Code:    http.StatusInternalServerError,
+			Message: "Error in encoding request",
+		})
+	}
+
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(msg))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, response.Error{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal Server Error",
+		})
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	client := new(http.Client)
+	resp, err := client.Do(req)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, response.Error{
+			Code:    http.StatusInternalServerError,
+			Message: fmt.Sprintf("Error in sending request to %s: %s", url, err.Error()),
+		})
+	}
+	defer resp.Body.Close()
+
+	var rpcErr json2.Error
+	err = json2.DecodeClientResponse(resp.Body, &rpcErr)
+	jErr, ok := err.(*json2.Error)
+	if ok {
+		return c.JSON(http.StatusInternalServerError, response.Error{
+			Code:    http.StatusInternalServerError,
+			Message: jErr.Error(),
+		})
+	}
+
+	rerr := uc.repo.DisableUser(id)
+	if rerr != nil {
+		return c.JSON(rerr.StatusCode(), response.Error{
+			Code:    rerr.StatusCode(),
+			Message: rerr.Error(),
+			Errors:  rerr.Errors(),
+		})
+	}
+	return c.JSON(http.StatusOK, response.Success{
+		Code:    http.StatusOK,
+		Message: "User Disabled",
+	})
+}

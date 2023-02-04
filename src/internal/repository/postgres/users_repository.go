@@ -65,6 +65,32 @@ func (psql *postgres) UpdateUser(id int, user request.UpdateUser) rest_err.RestE
 	return nil
 }
 
+func (psql *postgres) ActiveUser(id int) rest_err.RestErr {
+	var query string
+	var err error
+
+	query = `UPDATE users SET active = $1 WHERE id = $2`
+	_, err = psql.db.Exec(context.Background(), query, true, id)
+
+	if err != nil {
+		return rest_err.NewRestErr(http.StatusInternalServerError, "error while activating user", []string{err.Error()})
+	}
+	return nil
+}
+
+func (psql *postgres) DisableUser(id int) rest_err.RestErr {
+	var query string
+	var err error
+
+	query = `UPDATE users SET active = $1 WHERE id = $2`
+	_, err = psql.db.Exec(context.Background(), query, false, id)
+
+	if err != nil {
+		return rest_err.NewRestErr(http.StatusInternalServerError, "error while activating user", []string{err.Error()})
+	}
+	return nil
+}
+
 func (psql *postgres) DeleteUser(id int) rest_err.RestErr {
 	query := `DELETE FROM users WHERE id = $1`
 	_, err := psql.db.Exec(context.Background(), query, id)

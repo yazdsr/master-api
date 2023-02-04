@@ -8,6 +8,7 @@ type User struct {
 	Password   string    `json:"password"`
 	FullName   string    `json:"full_name"`
 	ServerID   int       `json:"server_id"`
+	Active     bool      `json:"active"`
 	ValidUntil time.Time `json:"valid_until"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
