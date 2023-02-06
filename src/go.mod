@@ -3,18 +3,18 @@ module github.com/yazdsr/master-api
 go 1.19
 
 require (
+	github.com/georgysavva/scany v1.2.1
 	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/gorilla/rpc v1.2.0
+	github.com/jackc/pgx/v4 v4.10.1
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo/v4 v4.10.0
 	github.com/urfave/cli/v2 v2.23.7
 	go.uber.org/zap v1.24.0
-	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
-	github.com/georgysavva/scany v1.2.1 // indirect
-	github.com/gorilla/rpc v1.2.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.8.0 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
@@ -22,7 +22,6 @@ require (
 	github.com/jackc/pgproto3/v2 v2.0.6 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
 	github.com/jackc/pgtype v1.6.2 // indirect
-	github.com/jackc/pgx/v4 v4.10.1 // indirect
 	github.com/jackc/puddle v1.1.3 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect

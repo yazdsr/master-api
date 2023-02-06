@@ -40,7 +40,7 @@ func New(logger logger.Logger, repo repository.Postgres, jwt jwt.Jwt) http.Rest 
 		},
 		serverController: &serverController{
 			logger: logger,
-			repo: repo,
+			repo:   repo,
 		},
 	}
 }

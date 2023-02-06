@@ -437,7 +437,7 @@ func (uc *userController) DisableUser(c echo.Context) error {
 	}
 
 	url := fmt.Sprintf("http://%s:%d", server.Ip, server.Port)
-	params := &request.ActiveUserRPC{
+	params := &request.DisableUserRPC{
 		Username: user.Username,
 	}
 
