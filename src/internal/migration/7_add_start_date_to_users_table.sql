@@ -1,0 +1,2 @@
+ALTER TABLE users
+ADD COLUMN start_date TIMESTAMP NOT NULL;

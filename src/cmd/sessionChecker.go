@@ -42,7 +42,7 @@ func sessionChecker(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	
+
 	go func() {
 		for {
 			time.Sleep(time.Second * 5)
@@ -55,7 +55,7 @@ func sessionChecker(c *cli.Context) error {
 				continue
 			}
 			for _, user := range users {
-				if user.ValidUntil.Unix() < time.Now().Unix() {
+				if user.ValidUntil.Unix() < time.Now().Unix() || time.Now().Unix() < user.StartDate.Unix() {
 					server := new(model.Server)
 					query := `SELECT * FROM servers WHERE id = $1`
 					err := pgxscan.Get(context.Background(), db, server, query, user.ServerID)
@@ -99,6 +99,55 @@ func sessionChecker(c *cli.Context) error {
 
 					query = `UPDATE users SET active = $1 WHERE id = $2`
 					_, err = db.Exec(context.Background(), query, false, user.ID)
+
+					if err != nil {
+						fmt.Println(jErr.Error())
+						continue
+					}
+				} else {
+					server := new(model.Server)
+					query := `SELECT * FROM servers WHERE id = $1`
+					err := pgxscan.Get(context.Background(), db, server, query, user.ServerID)
+					if err != nil {
+						fmt.Println(err.Error())
+						continue
+					}
+					url := fmt.Sprintf("http://%s:%d", server.Ip, server.Port)
+					params := &request.DisableUserRPC{
+						Username: user.Username,
+					}
+
+					msg, err := json2.EncodeClientRequest("activeUser", params)
+					if err != nil {
+						fmt.Println(err.Error())
+						continue
+					}
+
+					req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(msg))
+					if err != nil {
+						fmt.Println(err.Error())
+						continue
+					}
+
+					req.Header.Set("Content-Type", "application/json")
+					client := new(http.Client)
+					resp, err := client.Do(req)
+					if err != nil {
+						fmt.Println(err.Error())
+						continue
+					}
+
+					var rpcErr json2.Error
+					err = json2.DecodeClientResponse(resp.Body, &rpcErr)
+					jErr, ok := err.(*json2.Error)
+					if ok {
+						fmt.Println(jErr.Error())
+						continue
+					}
+					resp.Body.Close()
+
+					query = `UPDATE users SET active = $1 WHERE id = $2`
+					_, err = db.Exec(context.Background(), query, true, user.ID)
 
 					if err != nil {
 						fmt.Println(jErr.Error())

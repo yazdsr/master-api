@@ -62,12 +62,18 @@ func (uc *userController) CreateUser(c echo.Context) error {
 		}
 		return c.JSON(rErr.Code, rErr)
 	}
-	if user.Username == "" || user.Password == "" || user.FullName == "" || user.ServerID == 0 || user.ValidUntil.IsZero() {
+	if user.Username == "" || user.Password == "" || user.FullName == "" || user.ServerID == 0 || user.ValidUntil.IsZero() || user.StartDate.IsZero() {
 		rErr := response.Error{
 			Code:    http.StatusBadRequest,
 			Message: "Fill Required Fields",
 		}
 		return c.JSON(rErr.Code, rErr)
+	}
+	if user.StartDate.Unix() >= user.ValidUntil.Unix() {
+		return c.JSON(http.StatusBadRequest, response.Error{
+			Code:    http.StatusBadRequest,
+			Message: "Start Date should be greater than due date",
+		})
 	}
 
 	server, rErr := uc.repo.FindServerByID(user.ServerID)
@@ -90,6 +96,25 @@ func (uc *userController) CreateUser(c echo.Context) error {
 			Code:    http.StatusInternalServerError,
 			Message: "Internal Server Error",
 		})
+	}
+
+	users, rerr := uc.repo.FindAllUsers()
+	if rerr != nil {
+		return c.JSON(http.StatusInternalServerError, response.Error{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal Server Error",
+		})
+	}
+
+	for _, u := range users {
+		if u.ServerID == user.ServerID {
+			if (user.StartDate.Unix() < u.ValidUntil.Unix() && user.StartDate.Unix() > u.StartDate.Unix()) || (user.ValidUntil.Unix() > u.StartDate.Unix() && user.ValidUntil.Unix() < u.ValidUntil.Unix()) {
+				return c.JSON(http.StatusBadRequest, response.Error{
+					Code:    http.StatusBadRequest,
+					Message: fmt.Sprintf("There is start and due date conflict between this user and user with id %d and username %s", u.ID, u.Username),
+				})
+			}
+		}
 	}
 
 	url := fmt.Sprintf("http://%s:%d", server.Ip, server.Port)
@@ -186,6 +211,25 @@ func (uc *userController) UpdateUser(c echo.Context) error {
 			Code:    rerr.StatusCode(),
 			Message: rerr.Error(),
 		})
+	}
+
+	users, rerr := uc.repo.FindAllUsers()
+	if rerr != nil {
+		return c.JSON(http.StatusInternalServerError, response.Error{
+			Code:    http.StatusInternalServerError,
+			Message: "Internal Server Error",
+		})
+	}
+
+	for _, u := range users {
+		if u.ServerID == usr.ServerID && u.ID != usr.ID {
+			if (usr.StartDate.Unix() < u.ValidUntil.Unix() && usr.StartDate.Unix() > u.StartDate.Unix()) || (usr.ValidUntil.Unix() > u.StartDate.Unix() && usr.ValidUntil.Unix() < u.ValidUntil.Unix()) {
+				return c.JSON(http.StatusBadRequest, response.Error{
+					Code:    http.StatusBadRequest,
+					Message: fmt.Sprintf("There is start and due date conflict between this user and user with id %d and username %s", u.ID, u.Username),
+				})
+			}
+		}
 	}
 
 	if user.Password != "" {
