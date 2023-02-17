@@ -1,5 +1,27 @@
 version: "3.9"
 services:
+  master-api-serve:
+    image: master-api:1.0.0
+    env_file:
+      - .env
+    ports:
+    - 8888:8888
+    networks:
+      - pgnet
+    volumes:
+      - masterapi:/root/logs
+    restart: always
+    command: s
+  master-api-session-checker:
+    image: master-api:1.0.0
+    env_file:
+      - .env
+    networks:
+      - pgnet
+    volumes:
+      - masterapi:/root/logs
+    restart: always
+    command: c
   pgdb:
     image: postgres
     environment:
@@ -29,3 +51,4 @@ networks:
 volumes: 
   pgdata:
   pgadmindata:
+  masterapi:
