@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  pgdb:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - ${DB_PORT}:5432
+    networks:
+      - pgnet
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: always
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - ${PGADMIN_PORT}:80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    networks:
+      - pgnet
+    volumes:
+      - pgadmindata:/var/lib/postgresql/data
+    restart: always
+networks: 
+  pgnet:
+    driver: bridge
+volumes: 
+  pgdata:
+  pgadmindata:
+  masterapi:
