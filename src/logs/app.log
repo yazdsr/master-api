@@ -4,3 +4,4 @@
 {"level":"ERROR","ts":"2023-01-19T12:48:54.870+0330","msg":"cannot parse `postgres://:xxxxx@:0/`: invalid port (outside range)"}
 {"level":"ERROR","ts":"2023-02-14T17:35:30.769+0330","msg":"error happen while serving: http: Server closed"}
 {"level":"ERROR","ts":"2023-02-14T18:04:23.899+0330","msg":"error happen while serving: http: Server closed"}
+{"level":"ERROR","ts":"2023-02-27T04:39:31.884+0330","msg":"failed to connect to `host=127.0.0.1 user=postgres database=yazdsr`: dial error (dial tcp 127.0.0.1:5433: connectex: No connection could be made because the target machine actively refused it.)"}

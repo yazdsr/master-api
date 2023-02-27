@@ -189,7 +189,7 @@ func (uc *userController) UpdateUser(c echo.Context) error {
 			Message: "Invalid Request",
 		})
 	}
-	if id == 0 || user.FullName == "" || user.ValidUntil.IsZero() {
+	if id == 0 || user.FullName == "" || user.ValidUntil.IsZero() || user.StartDate.IsZero() {
 		rErr := response.Error{
 			Code:    http.StatusBadRequest,
 			Message: "Fill Required Fields",
@@ -223,7 +223,7 @@ func (uc *userController) UpdateUser(c echo.Context) error {
 
 	for _, u := range users {
 		if u.ServerID == usr.ServerID && u.ID != usr.ID {
-			if (usr.StartDate.Unix() < u.ValidUntil.Unix() && usr.StartDate.Unix() > u.StartDate.Unix()) || (usr.ValidUntil.Unix() > u.StartDate.Unix() && usr.ValidUntil.Unix() < u.ValidUntil.Unix()) {
+			if (user.StartDate.Unix() < u.ValidUntil.Unix() && user.StartDate.Unix() > u.StartDate.Unix()) || (user.ValidUntil.Unix() > u.StartDate.Unix() && user.ValidUntil.Unix() < u.ValidUntil.Unix()) {
 				return c.JSON(http.StatusBadRequest, response.Error{
 					Code:    http.StatusBadRequest,
 					Message: fmt.Sprintf("There is start and due date conflict between this user and user with id %d and username %s", u.ID, u.Username),
