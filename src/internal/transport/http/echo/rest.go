@@ -52,7 +52,7 @@ func (r *rest) Start(address string) error {
 		AllowMethods:     []string{nethttp.MethodGet, nethttp.MethodOptions, nethttp.MethodPut, nethttp.MethodPost, nethttp.MethodDelete, nethttp.MethodPatch},
 		AllowCredentials: true,
 	}))
-
+	r.echo.Use(middleware.Logger())
 	r.routing()
 	return r.echo.Start(fmt.Sprintf(":%s", address))
 }
